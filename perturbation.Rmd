@@ -1,0 +1,215 @@
+---
+title: "Interpretable Explanations of Black Boxes by Meaningful Perturbation"
+subtitle: "XAI Seminar"
+author: "Layla Bouzoubaa"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["xaringan-themer.css", "custom.css"]
+    nature:
+      beforeInit: "assets/macros.js"
+      slideNumberFormat: "%current%"
+      highlightStyle: github
+      highlightLines: true
+      ratio: 16:9
+      countIncrementalSlides: true
+---
+
+```{r xaringan-themer, include = FALSE, warning=FALSE}
+library(xaringanthemer)
+style_duo_accent(
+  primary_color = "#002F6C",
+  secondary_color = "#FFC600",
+  inverse_header_color = "#FFFFFF",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Droid Mono"),
+)
+```
+
+# Objectives
+
+- Identify the contributions made by this paper
+
+- Recall existing approaches to explaining classifiers & their limitations
+
+- Understand proposed framework of explanations (contribution #1)
+
+- Understand pitfalls in designing automatic explanation systems (contribution #2)
+
+- Understand how network saliency is interpreted in proposed framework (contribution #3)
+
+- Application of framework
+
+
+---
+## Main Contributions
+
+1. Framework of explanations as *meta-predictors* (#1)  
+
+--
+
+1. *Pitfalls* in designing automatic explanation systems (#2)  
+
+--
+
+1. *Reinterpret* network saliency in proposed framework (#3)  
+
+
+
+???
+1.Meta-predictors coming from meta-learning which is when an algorithm requires other algorithms that have already been trained on data to make predictions. At a high level, the authors propose a general framework that uses explanations from other techniques as meta-predictors.
+
+2. 
+ 
+---
+## Recap `r emo::ji("airplane")`
+
+.pull-left[
+
+*Saliency Maps*: process images to distinguish visual features in images (e.g. converting colored images to black and white, infrared)
+
+*Backprogpogation* vs *network activation*: 
+  - activation function: checks to see if the computed weighted sum of inputs is above a required threshold (e.g. softmax, ReLu)
+  - backpropogation: method to make neural networks self-improving when actual output is different than expected output
+]
+
+.pull-right[
+
+![](img/saliency1.png)
+
+]
+
+???
+Before we take off, let's take a moment to review the safety information card located in your seatback pocket. 
+This paper builds on their 2014 paper, one of the first instances of saliency maps being used to visualize image classification models.  
+Saliency maps process images to differentiate visual features in images. For example, coloured images are converted to black-and-white images in order to analyse the strongest colours present in them. Other instances would be using infrared to detect temperature (red colour is hot and blue is cold) and night vision to detect light sources(green is bright and black is dark).
+
+When neural networks are trained, a range of inputs are passed along with corresponding expected output. Activation functions then produce an output from the set of inputs.
+
+Ideally you want an optimal NN where the expected results and the actual results are within the error threshold. However occasionally, the expected output is different than the actual output. As a consequence, information is fed back into the network and the weights and biases are enhanced. This process is recursive in nature and is known as back propagation.
+
+---
+## Considerations
+
+.pull-left[
+]
+
+.pull-right[
+
+
+]
+
+???
+
+---
+## Charateristics
+
+.pull-left[
+
+
+.footnote[*abc]
+]
+
+.pull-right[
+
+
+
+]
+
+???
+
+---
+class: inverse center middle
+
+# blah
+
+---
+## Speech Recognition
+
+
+
+.pull-left[
+
+.footnote[1.abc]  
+]
+
+.pull-right[
+
+
+.footnote[2.abc]
+]
+
+???
+
+---
+class: inverse center middle
+
+# blah
+
+---
+## Vocabulary
+
+
+
+
+???
+
+
+
+---
+## Similarity 
+
+
+
+???
+
+---
+## Adaptation
+
+
+???
+
+---
+## Case Base
+
+
+???
+
+---
+class: inverse center middle
+
+# blah
+
+---
+## Dialogue Management for CCBR
+
+.pull-left[
+
+
+]
+
+.pull-right[
+
+]
+
+???
+
+---
+## References
+
+```{r, load_refs, echo=FALSE, message=FALSE}
+# library(RefManageR)
+# bib <- ReadBib("./assets/S0933365711000480.bib", check = FALSE)
+# ui <- "- "
+```
+
+```{r, print_refs, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+# writeLines(ui)
+# print(bib[key = "MCSHERRY201159"], 
+#   .opts = list(check.entries = FALSE, 
+#                style = "html", 
+#                bib.style = "authoryear"))
+```
+
