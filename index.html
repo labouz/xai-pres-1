@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Interpretable Explanations of Black Boxes by Meaningful Perturbation</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Layla Bouzoubaa" />
+    <meta name="date" content="2021-11-18" />
+    <script src="libs/header-attrs-2.7/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Interpretable Explanations of Black Boxes by Meaningful Perturbation
+## XAI Seminar
+### Layla Bouzoubaa
+### 2021-11-18
+
+---
+
+
+
+
+
+## Main Contributions
+
+1. Framework of explanations as *meta-predictors* (#1)  
+
+--
+
+1. *Pitfalls* in designing automatic explanation systems (#2)  
+
+--
+
+1. *Reinterpret* network saliency in proposed framework (#3)  
+
+
+
+???
+1.Meta-predictors coming from meta-learning which is when an algorithm requires other algorithms that have already been trained on data to make predictions. At a high level, the authors propose a general framework that uses explanations from other techniques as meta-predictors.
+
+2. 
+ 
+---
+## Recap ✈️
+
+.pull-left[
+
+Terms to know:   
+
+- *Image perturbation*: slightly altering an image as reduce overfitting an image classifier  
+  - offset
+  - good practice  
+- *Saliency maps*: process images to distinguish visual features in images (e.g. converting colored images to black and white, infrared)
+- *Activation function*: checks to see if the computed weighted sum of inputs is above a required threshold (e.g. softmax, ReLu)
+  - *Activation maps*: visual representation of activation numbers at various layers of the network to understand which parts of the image contributed to the output
+- *Backpropogation*: method to make neural networks self-improving when actual output is different than expected output  
+
+]
+
+.pull-right[
+
+![](img/saliency1.png)
+
+]
+
+???
+Before we take off, let's take a moment to review the safety information card located in your seatback pocket. 
+This paper builds on their 2015 paper, one of the first instances of saliency maps being used to visualize image classification models.  
+
+image perturbation means to slightly alter an image to reduce the chances of overfitting an image classifier. why? we offset so that in case you get any variant images (slightly cutoff or not centered) during testing and its good practice for a robust classifier. 
+
+Saliency maps process images to differentiate visual features in images. For example, coloured images are converted to black-and-white images in order to analyse the strongest colours present in them. Other instances would be using infrared to detect temperature (red colour is hot and blue is cold) and night vision to detect light sources(green is bright and black is dark).
+
+When neural networks are trained, a range of inputs are passed along with corresponding expected output. Activation functions help decide whether a neuron should be activated. This helps determine whether the information that the neuron is receiving is relevant for the input if it pass a certain threshold.
+
+Ideally you want an optimal NN where the expected results and the actual results are within the error threshold. However occasionally, the expected output is different than the actual output. As a consequence, information is fed back into the network and the weights and biases are enhanced. This process is recursive in nature and is known as back propagation.
+
+---
+## Backbone of proposed work
+
+.pull-left[
+![](img/backprop-method.png)
+
+]
+
+.pull-right[
+
+- Proposed framework = learned masking  
+  - 2015 - gradient based saliency 
+  - Pixel's contribution is based on the gradient of the prediction w.r.t the input features
+  
+- Guided Backprop (2016)  
+  - Gradient based saliency + DeConvNet (only positive error signals)  
+  - DeConvNet only backpropogates positive error signals
+  - Produces sharper visualizations
+
+- Limitations:  
+  - Insensitive to model and data
+
+]
+
+???
+It is important to understand a bit on prior works as later they will be used to compare. 
+
+at it's core, this paper is based on their 2015 work developing gradient based saliency maps (there's more but i will get to that later). What is gradient-based?
+gradient-based saliency - meaning - if I were to change change a certain pixel, the predicted class probability would go up or down depending on the value of the gradient. The larger the gradient the stronger the effect of change at the pixel.
+
+then there is guided backprop = gradient based saliency + deconvolution aka deconvnet. 
+Deconvnet is almost identical to "vanilla gradient" except for a reversal of the activation layer. Deconvnet backpropogates the gradient through ReLU and sets negative values in a layer to 0.
+
+Guided Backprop - combines backpropagation and DeconvNets when handling the ReLU. Like DeconvNets, in Guided Backpropagation we only backpropagate positive error signals – i.e. we set the negative gradients to zero. But, we also restrict to backpropogate to only positive inputs. So here, the gradient is "guided" by both the input and the error signal.
+
+The three methods here are closely related methods for creating saliency maps. The main difference is how they backpropogate thru the linear rectifier (ReLU).
+limitation: Insensitivity is highly undesirable because it would mean that the “explanation” is unrelated to model and data.This would be similar to edge detection where pixels on the edges of an object are highlighted to indicate a strong pixel change and do not require training.
+
+---
+## Backbone of proposed work pt.2
+
+.pull-left[
+
+![](img/net-act-method.png)
+
+&lt;/br&gt;
+
+![](img/saliency-cam.png)
+
+]
+
+.pull-right[
+
+- Class Activation Mapping (CAM)  
+  - Gradient-CAM
+  - Gradient is not backpropogated
+  
+- Layer-wise relevance propogation (LRP) &amp; Excitation Backprop  
+
+- Limitations:  
+  - heuristics
+  - not model agnostic (except for gradient-based saliency &amp; LRP)
+  - only applicable to certain architectures (e.g. GoogLeNet)
+
+]
+
+???
+There are also techniques such as CAM and Grad-CAM. Class activation maps are a technique to get the discriminative image regions used by a CNN to identify a specific class. 
+
+Grad-CAM: Unlike other methods, the gradient is not backpropagated all the way back to the image, but (usually) to the last convolutional layer to produce a coarse localization map that highlights important regions of the image.
+
+LRP and excitation backprop: similar in that they propagate the network weights and neural activation through the network up until the input layer. Difference is that EBP takes a top-down down approach - starting with the inputs through to the outputs.
+
+Limitations:
+1. these methods result in pretty visualizations but introduce heuristic notions of image saliency
+2. not model agnostic - most are limited to neural networks
+---
+class: inverse center middle
+
+# Put it together
+
+---
+## This work
+
+
+
+.pull-left[
+
+![](img/work-together.png) 
+]
+
+.pull-right[
+
+
+Parts:
+ 
+1. Explanations as meta-predictors  
+1. Local explanation paradigm  
+1. Gradient based saliency
+1. Feedback CNN architecture 
+]
+
+???
+Finally, this paper builds on four main works:
+ 
+a paper in 2015 proposing explanations as predictors whereas here they use them as meta--predictors
+a 2016 paper introducing Local Interpretable Model-Agnostic Explanation (LIME) but adds that LIME takes too long to converge and were able to reduce the number of iterations.  
+a Feedback CNN architecture:
+---
+class: inverse center middle
+
+# Explanations
+
+---
+## Explanations as meta-predictors
+
+- Meta-Learning = learns how best to use predictions from other algorithms to make predictions
+
+.pull-left[
+**Explanation rule for robin classifier:**
+
+![](img/explain-robin-classifier.png)
+
+**Expected prediction error of classifier:**
+![](img/prediction-error.png)
+
+]
+
+.pull-right[
+
+**Learning Explanations:**
+
+Regularized empirical risk minimization:
+
+![](img/rerm.png)
+
+Goals:
+1. Explanation (Q) is generalizable  
+1. Q is simple, thus more interpretable
+]
+???
+Meta = level above
+meta-learning = an algorithm that requires other algorithms that have already been trained on data
+
+indicator function can be thought of like a switch - yes if event happened, no if it didn't. 
+Q alone isn't very insightful. but we know it is interpretable because we know Xc is - f was trained as a robin classifier, 
+
+we have the rule and prediction error, but how are explanations learned?
+the idea is that the prediction error can be measured as prediction accuracy therefore an ML algorithm can be employed to discover explanations by finding rules out of a pool of rules that apply to a certain classifier. This is similar to a traditional learning problem, specifically a regularized empirical risk minimization function. 
+
+RERM - regularizers measure the sensitivity of an attribute of a predictor - in this case the explanation. we want the explanations to be as generalizable as possible.  
+
+---
+## Why is this important? 
+
+.pull-left[
+
+**Local explanations** 
+
+--
+
+*Linear classifier interpretation:*  
+
+![](img/local-lin-interp.png)
+&lt;/br&gt;
+
+--
+
+*Then the gradient:*  
+
+![](img/lin-gradient.png)
+&lt;/br&gt;
+
+- In linear classification, change is the same regardless of the starting point, x&lt;sub&gt;0&lt;/sub&gt;  
+]
+--
+
+.pull-right[
+Suggested approach: 
+
+- Perturbations x obtained by deleting subregions of x&lt;sub&gt;0&lt;/sub&gt;  --&gt; masking
+
+![](img/mask-form.png)
+]
+
+???
+we know local explanations are rules that predict the response of black box function in a neighborhood of a certain point.  
+What was discovered from their previous work on gradient based saliency maps is that their interpretation of the saliency map breaks for linear classifiers. 
+If this is the formula to explain a linear classifier then the gradient at point x0 is just equal to some constant w - making it independent of the point x0 thus not interpretable as saliency.
+
+Arbitrary displacements of x0 are important for local explanations, however in linear classification change is the same regardless of where the point started.
+---
+class: inverse center middle
+
+# Saliency
+
+---
+## Meaningful perturbations
+
+*Suggestion*: masking or "deleting" regions, *R*, from an image
+
+.pull-left[
+
+*Consideration:*
+
+- Definition of "deleting" information
+
+*Approach* 
+
+![](img/delete-proxies.png)
+&lt;/br&gt;
+![](img/fig4.png)
+]
+
+--
+
+.pull-right[
+
+*Consideration:*
+
+- Explain the effect of deleting part of an image
+
+
+*Approach:*
+
+Find deletions that are maximally informative
+
+![](img/argmin.png)
+]
+???
+remember, saliency identifies which regions of an image are used by the model to produce the output. 
+there are several considerations that need to be made when "deleting" information
+1. we want plausible effects on the image to lead to more meaningful perturbations and explanations. fig 4 shows the application of these proxies
+
+2. maximally informative: 
+learning problem formula: argmin simply where in the array of different output scores makes m the smallest. The objective being that we want to find the smallest deletion mask that causes our output probability to drop significantly.
+---
+
+class: inverse center middle
+
+# Experiment
+
+---
+## Modifying m*
+
+.pull-left[
+
+![](img/fig5.png)
+
+![](img/new-eqn.png)
+]
+
+.pull-right[
+
+*Consideration:* artifacts generating explanations  
+
+*Approach:* 
+
+1. Not relying on details of a singly-learned mask  
+1. Encourage masks to have a simple structure that cannot be co-adapted to artifacts
+
+
+*Modifications:*
+
+1. Applying mask stochastically  
+1. Regularizing m in total-variation (TV) norm &amp; up-sampling m from a low resolution version
+
+]
+
+???
+see the examples run on these two images : an espresso and and a maypole
+this experiment was run with GoogLeNet
+in the espresso image the classifier does a fairly good job at not recognizing correctly 
+the learned mask jointly applied the blur, noise and constant
+however in the maypole, the mask learned to delete the sky instead of the pole because this image has introduce an unnatural artifact, the sky (it's weird to say unnatural because not all artifacts seem unnatural as in this instance)
+
+
+perturbations co-adapting to artifacts are seen here as problematic as they can affect the explanations. as stated previously we want the explanations to be as generalizable as possible so it cannot rely on a masked that has been learned once. 
+Also,  the authors believe that masks co-adapted with artifacts are not representative of natural perturbations which can affect the explanations as the meaning of an explanation depends on the meaning of the changes applied to the input thus - they suggest a more simple structure to masking. 
+
+The mask should be sparse. Ideally the mask should be the minimal possible mask to drop the category score. This translates to a L1(1 - mask) term in the cost function.
+The mask should be smooth. This translates to a total variation regularization in the cost function.
+---
+## Summary
+
+- The goal is to solve for a mask that explains why did the network output a score for a certain category. 
+- Low resolution masks used to perturb the input image   
+- Purturbation combines blurred image, the image, and up-sampled mask  
+- Lower the mask, blurrier the image
+
+
+---
+## Results
+
+Parameters:
+
+- learning rate = 0.1  
+- N = 300 iterations  
+- lambda1 = 10&lt;sup&gt;-4&lt;/sup&gt;  
+- lambda2 = 10&lt;sup&gt;-2&lt;/sup&gt;  
+- beta = 3  
+- 28 x 28 mask upsampled by factor delta = 8
+
+
+![](img/results.png)
+
+??? 
+Using Adam to minimize Googlenet softmax probability of the target class
+lambads are regularization constants
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="assets/macros.js"></script>
+<script>var slideshow = remark.create({
+"slideNumberFormat": "%current%",
+"highlightStyle": "github",
+"highlightLines": true,
+"ratio": "16:9",
+"countIncrementalSlides": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -39,5 +39,4 @@ vignettes/*.pdf
 .Renviron
 
 *.Rproj
-perturbation.html
 .DS_Store
