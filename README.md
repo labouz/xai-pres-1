@@ -16,3 +16,5 @@ The presentation draws on the work proposed on a 2017 paper [Interpretable Expla
 * 📺 [Introduction to Optimization: Gradient Based Algorithms](https://www.youtube.com/watch?v=n-Y0SDSOfUI)
 * 📘 Molnar, Christoph. “Interpretable machine learning. A Guide for Making Black Box Models Explainable”, 2019, Chapter 10. https://christophm.github.io/interpretable-ml-book/.
 * 📝 [CNN Heat Maps: Gradients vs. DeconvNets vs. Guided Backpropagation](https://glassboxmedicine.com/2019/10/06/cnn-heat-maps-gradients-vs-deconvnets-vs-guided-backpropagation/#:~:text=In%20DeconvNets%2C%20at%20ReLUs%20only,backpropagation%2C%20except%20at%20the%20ReLUs.)
+
+Aknowledgment: [@jacobgil](https://github.com/jacobgil) for the pytorch implementation of this paper's framework.
