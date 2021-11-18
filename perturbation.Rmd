@@ -28,22 +28,7 @@ style_duo_accent(
 )
 ```
 
-# Objectives
 
-- Identify the contributions made by this paper
-
-- Recall existing approaches to explaining classifiers & their limitations
-
-- Understand proposed framework of explanations (contribution #1)
-
-- Understand pitfalls in designing automatic explanation systems (contribution #2)
-
-- Understand how network saliency is interpreted in proposed framework (contribution #3)
-
-- Application of framework
-
-
----
 ## Main Contributions
 
 1. Framework of explanations as *meta-predictors* (#1)  
@@ -98,7 +83,6 @@ When neural networks are trained, a range of inputs are passed along with corres
 
 Ideally you want an optimal NN where the expected results and the actual results are within the error threshold. However occasionally, the expected output is different than the actual output. As a consequence, information is fed back into the network and the weights and biases are enhanced. This process is recursive in nature and is known as back propagation.
 
-relu: piecewise linear function that will output the input directly if it is positive, otherwise, it will output zero.
 ---
 ## Backbone of proposed work
 
@@ -118,11 +102,13 @@ relu: piecewise linear function that will output the input directly if it is pos
   - DeConvNet only backpropogates positive error signals
   - Produces sharper visualizations
 
+- Limitations:  
+  - Insensitive to model and data
+
 ]
 
 ???
-This work builds upon and compares the output some of the various works done to interpret image classifications.
-The three methods here are closely related methohds for creating saliency maps. The main difference is how they backpropogate thru the linear rectifier (ReLU).
+It is important to understand a bit on prior works as later they will be used to compare. 
 
 at it's core, this paper is based on their 2015 work developing gradient based saliency maps (there's more but i will get to that later). What is gradient-based?
 gradient-based saliency - meaning - if I were to change change a certain pixel, the predicted class probability would go up or down depending on the value of the gradient. The larger the gradient the stronger the effect of change at the pixel.
@@ -131,6 +117,9 @@ then there is guided backprop = gradient based saliency + deconvolution aka deco
 Deconvnet is almost identical to "vanilla gradient" except for a reversal of the activation layer. Deconvnet backpropogates the gradient through ReLU and sets negative values in a layer to 0.
 
 Guided Backprop - combines backpropagation and DeconvNets when handling the ReLU. Like DeconvNets, in Guided Backpropagation we only backpropagate positive error signals – i.e. we set the negative gradients to zero. But, we also restrict to backpropogate to only positive inputs. So here, the gradient is "guided" by both the input and the error signal.
+
+The three methods here are closely related methods for creating saliency maps. The main difference is how they backpropogate thru the linear rectifier (ReLU).
+limitation: Insensitivity is highly undesirable because it would mean that the “explanation” is unrelated to model and data.This would be similar to edge detection where pixels on the edges of an object are highlighted to indicate a strong pixel change and do not require training.
 
 ---
 ## Backbone of proposed work pt.2
@@ -152,7 +141,6 @@ Guided Backprop - combines backpropagation and DeconvNets when handling the ReLU
   - Gradient is not backpropogated
   
 - Layer-wise relevance propogation (LRP) & Excitation Backprop  
-  - 
 
 - Limitations:  
   - heuristics
@@ -166,7 +154,7 @@ There are also techniques such as CAM and Grad-CAM. Class activation maps are a 
 
 Grad-CAM: Unlike other methods, the gradient is not backpropagated all the way back to the image, but (usually) to the last convolutional layer to produce a coarse localization map that highlights important regions of the image.
 
-LRP and excitation backprop: similar in that they propagate the network weights and neural activation through the network up until the input layer. Difference is that EBP takes a top-down 
+LRP and excitation backprop: similar in that they propagate the network weights and neural activation through the network up until the input layer. Difference is that EBP takes a top-down down approach - starting with the inputs through to the outputs.
 
 Limitations:
 1. these methods result in pretty visualizations but introduce heuristic notions of image saliency
@@ -245,10 +233,12 @@ Q alone isn't very insightful. but we know it is interpretable because we know X
 we have the rule and prediction error, but how are explanations learned?
 the idea is that the prediction error can be measured as prediction accuracy therefore an ML algorithm can be employed to discover explanations by finding rules out of a pool of rules that apply to a certain classifier. This is similar to a traditional learning problem, specifically a regularized empirical risk minimization function. 
 
-RERM - regularizers measure the sensitivity of an attribute of a predictor - in this case the explanation. we want the explanations to be as generalizable as possible. This 
+RERM - regularizers measure the sensitivity of an attribute of a predictor - in this case the explanation. we want the explanations to be as generalizable as possible.  
 
 ---
 ## Why is this important? 
+
+.pull-left[
 
 **Local explanations** 
 
@@ -260,20 +250,23 @@ RERM - regularizers measure the sensitivity of an attribute of a predictor - in 
 </br>
 
 --
+
 *Then the gradient:*  
 
 ![](img/lin-gradient.png)
 </br>
 
 - In linear classification, change is the same regardless of the starting point, x<sub>0</sub>  
-
+]
 --
 
+.pull-right[
 Suggested approach: 
 
 - Perturbations x obtained by deleting subregions of x<sub>0</sub>  --> masking
 
 ![](img/mask-form.png)
+]
 
 ???
 we know local explanations are rules that predict the response of black box function in a neighborhood of a certain point.  
@@ -282,11 +275,50 @@ If this is the formula to explain a linear classifier then the gradient at point
 
 Arbitrary displacements of x0 are important for local explanations, however in linear classification change is the same regardless of where the point started.
 ---
-## Saliency
+class: inverse center middle
+
+# Saliency
+
+---
+## Meaningful perturbations
+
+*Suggestion*: masking or "deleting" regions, *R*, from an image
+
+.pull-left[
+
+*Consideration:*
+
+- Definition of "deleting" information
+
+*Approach* 
+
+![](img/delete-proxies.png)
+</br>
+![](img/fig4.png)
+]
+
+--
+
+.pull-right[
+
+*Consideration:*
+
+- Explain the effect of deleting part of an image
 
 
+*Approach:*
+
+Find deletions that are maximally informative
+
+![](img/argmin.png)
+]
 ???
+remember, saliency identifies which regions of an image are used by the model to produce the output. 
+there are several considerations that need to be made when "deleting" information
+1. we want plausible effects on the image to lead to more meaningful perturbations and explanations. fig 4 shows the application of these proxies
 
+2. maximally informative: 
+learning problem formula: argmin simply where in the array of different output scores makes m the smallest. The objective being that we want to find the smallest deletion mask that causes our output probability to drop significantly.
 ---
 
 class: inverse center middle
@@ -294,37 +326,69 @@ class: inverse center middle
 # Experiment
 
 ---
-## blah blah blah
+## Modifying m*
 
 .pull-left[
 
+![](img/fig5.png)
 
+![](img/new-eqn.png)
 ]
 
 .pull-right[
 
+*Consideration:* artifacts generating explanations  
+
+*Approach:* 
+
+1. Not relying on details of a singly-learned mask  
+1. Encourage masks to have a simple structure that cannot be co-adapted to artifacts
+
+
+*Modifications:*
+
+1. Applying mask stochastically  
+1. Regularizing m in total-variation (TV) norm & up-sampling m from a low resolution version
+
 ]
 
 ???
+see the examples run on these two images : an espresso and and a maypole
+this experiment was run with GoogLeNet
+in the espresso image the classifier does a fairly good job at not recognizing correctly 
+the learned mask jointly applied the blur, noise and constant
+however in the maypole, the mask learned to delete the sky instead of the pole because this image has introduce an unnatural artifact, the sky (it's weird to say unnatural because not all artifacts seem unnatural as in this instance)
+
+
+perturbations co-adapting to artifacts are seen here as problematic as they can affect the explanations. as stated previously we want the explanations to be as generalizable as possible so it cannot rely on a masked that has been learned once. 
+Also,  the authors believe that masks co-adapted with artifacts are not representative of natural perturbations which can affect the explanations as the meaning of an explanation depends on the meaning of the changes applied to the input thus - they suggest a more simple structure to masking. 
+
+The mask should be sparse. Ideally the mask should be the minimal possible mask to drop the category score. This translates to a L1(1 - mask) term in the cost function.
+The mask should be smooth. This translates to a total variation regularization in the cost function.
+---
+## Summary
+
+- The goal is to solve for a mask that explains why did the network output a score for a certain category. 
+- Low resolution masks used to perturb the input image   
+- Purturbation combines blurred image, the image, and up-sampled mask  
+- Lower the mask, blurrier the image
+
 
 ---
-class: inverse center middle
+## Results
 
-# Code
----
-## References
+Parameters:
 
-```{r, load_refs, echo=FALSE, message=FALSE}
-# library(RefManageR)
-# bib <- ReadBib("./assets/S0933365711000480.bib", check = FALSE)
-# ui <- "- "
-```
+- learning rate = 0.1  
+- N = 300 iterations  
+- lambda1 = 10<sup>-4</sup>  
+- lambda2 = 10<sup>-2</sup>  
+- beta = 3  
+- 28 x 28 mask upsampled by factor delta = 8
 
-```{r, print_refs, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
-# writeLines(ui)
-# print(bib[key = "MCSHERRY201159"], 
-#   .opts = list(check.entries = FALSE, 
-#                style = "html", 
-#                bib.style = "authoryear"))
-```
 
+![](img/results.png)
+
+??? 
+Using Adam to minimize Googlenet softmax probability of the target class
+lambads are regularization constants
